@@ -115,25 +115,83 @@ while CaseCXX < len(CXX_Data):
 NewWb = Workbook()
 sheetX = NewWb.active
 sheetX.title = '一般柱-X'
+NewWb.create_sheet('一般柱-Y')
+sheetY = NewWb['一般柱-Y']
 for i in range(65,80):
     sheetX.column_dimensions[chr(i)].width = 15.0
+    sheetY.column_dimensions[chr(i)].width = 15.0
+## SheetX
 SheetRange = sheetX['A1':'O1']
-i = 0
+iX = 0
 for item in SheetRange[0]:
-    item.value = InitList_en[i]
+    item.value = InitList_en[iX]
     item.font = Font(name = 'Times New Roman', bold=True)
     item.alignment = Alignment(horizontal = 'center')
-    i = i + 1
+    iX = iX + 1
 SheetRange = sheetX['A2':'O2']
-i = 0
+iX = 0
 for item in SheetRange[0]:
-    item.value = InitList_zh[i]
+    item.value = InitList_zh[iX]
     item.font = Font(name = 'Times New Roman', bold=True)
     item.alignment = Alignment(horizontal = 'center')
-    i = i + 1
-# ## Final Adjustment
-# for row in range(2, sheetX.max_row):
-#     for column in range(sheetX.max_column):
-#         sheetX.cell(row=row+1,column=column+1).alignment = Alignment(horizontal = 'center')
-#         sheetX.cell(row=row+1,column=column+1).font = Font(name = 'Times New Roman')
-# NewWb.save('test.xlsx')
+    iX = iX + 1
+## SheetY
+SheetRange = sheetY['A1':'O1']
+iY = 0
+for item in SheetRange[0]:
+    item.value = InitList_en[iY]
+    item.font = Font(name = 'Times New Roman', bold=True)
+    item.alignment = Alignment(horizontal = 'center')
+    iY = iY + 1
+SheetRange = sheetY['A2':'O2']
+iY = 0
+for item in SheetRange[0]:
+    item.value = InitList_zh[iY]
+    item.font = Font(name = 'Times New Roman', bold=True)
+    item.alignment = Alignment(horizontal = 'center')
+    iY = iY + 1
+## input data to excel
+CaseCount = 3
+for case in ALLCASE :
+    CountStr = str(CaseCount)
+    ## X
+    sheetX['A' + CountStr] = case.name
+    sheetX['B' + CountStr] = case.type
+    sheetX['C' + CountStr] = case.HC
+    sheetX['D' + CountStr] = case.BC
+    sheetX['F' + CountStr] = case.No1
+    sheetX['G' + CountStr] = case.Num1  
+    sheetX['H' + CountStr] = case.No2  
+    sheetX['I' + CountStr] = case.Num2  
+    sheetX['J' + CountStr] = case.H1  
+    sheetX['K' + CountStr] = case.No  
+    sheetX['L' + CountStr] = case.Numx
+    sheetX['M' + CountStr] = case.S  
+    sheetX['N' + CountStr] = case.Nci  
+    sheetX['O' + CountStr] = case.whichFloor
+    ## Y
+    sheetY['A' + CountStr] = case.name
+    sheetY['B' + CountStr] = case.type
+    sheetY['C' + CountStr] = case.BC
+    sheetY['D' + CountStr] = case.HC
+    sheetY['F' + CountStr] = case.No1
+    sheetY['G' + CountStr] = case.Num1  
+    sheetY['H' + CountStr] = case.No2  
+    sheetY['I' + CountStr] = case.Num2  
+    sheetY['J' + CountStr] = case.H1  
+    sheetY['K' + CountStr] = case.No  
+    sheetY['L' + CountStr] = case.Numy
+    sheetY['M' + CountStr] = case.S  
+    sheetY['N' + CountStr] = case.Nci  
+    sheetY['O' + CountStr] = case.whichFloor
+    CaseCount = CaseCount + 1
+## Final Adjustment
+for row in range(2, sheetX.max_row):
+    for column in range(sheetX.max_column):
+        sheetX.cell(row=row+1,column=column+1).alignment = Alignment(horizontal = 'center')
+        sheetX.cell(row=row+1,column=column+1).font = Font(name = 'Times New Roman')
+for row in range(2, sheetY.max_row):
+    for column in range(sheetY.max_column):
+        sheetY.cell(row=row+1,column=column+1).alignment = Alignment(horizontal = 'center')
+        sheetY.cell(row=row+1,column=column+1).font = Font(name = 'Times New Roman')
+NewWb.save('test.xlsx')
