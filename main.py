@@ -27,6 +27,7 @@ Err = False
 FHdic = {}
 CNdic = {}
 ALLCASE = []
+Num2ExpList = []
 ## load CNK
 CNK1 = open('CNK1.INP', 'r')
 ## Load useless data
@@ -64,53 +65,70 @@ for i in range(int(F)) :
     line = MASS.readline().split()
     if line[0][-1] == 'L':
         fin = line[0][:-1]
-    elif line[0][-1] == 'A':
-        fin = line[0] + 'F'
-    else:
+    elif line[0][-1] == 'F':
         fin = line[0]
+    else:
+       fin = line[0] + 'F'
     FHdic[fin] = tmp
     tmp = "{:.1f}".format(float(line[1]) * 100.0)
 CXX_Data = CXX.readlines()
 CaseCXX = 0
 while CaseCXX < len(CXX_Data):
+    ## set lines
+    lines = []
+    lines.append(CXX_Data[CaseCXX].split())
+    lines.append(CXX_Data[CaseCXX + 1].split())
+    lines.append(CXX_Data[CaseCXX + 2].split())
+    lines.append(CXX_Data[CaseCXX + 3].split())
+    lines.append(CXX_Data[CaseCXX + 4].split())
+    lines.append(CXX_Data[CaseCXX + 5].split())
     #floor and cross
-    floor = CXX_Data[CaseCXX].split()[0] + 'F'
-    cross = CXX_Data[CaseCXX].split()[2]
+    floor = lines[0][0] + 'F'
+    cross = lines[0][2]
     # name
     name = floor + cross
     ## BC HC type
-    BC = CXX_Data[CaseCXX + 1].split()[0]
-    HC = CXX_Data[CaseCXX + 1].split()[1]
-    if HC == '0':
+    BC = float(lines[1][0])
+    HC = float(lines[1][1])
+    if BC == 0 and HC == 0:
+        CaseCXX = CaseCXX + 6
+        continue
+    if HC == 0:
         type = 'CIRL'
     else :
         type = 'RECT'
     ## No1 No2
-    No1 = CXX_Data[CaseCXX + 2].split()[0]
-    if CXX_Data[CaseCXX + 2].split()[1] == '0':
+    No1 = lines[2][0]
+    if lines[2][1] == '0':
         No2 = str(int(No1) - 1)
     else :
-        No2 = CXX_Data[CaseCXX + 2].split()[1]
+        No2 = lines[2][1]
     No1 = '#' + No1
     No2 = '#' + No2
     ## Num1 Num2
-    Num1 = int(CXX_Data[CaseCXX + 3].split()[0]) + int(CXX_Data[CaseCXX + 4].split()[0]) - 4
+    Num1 = int(lines[3][0]) + int(lines[4][0]) - 4
     if Num1 < 0:
         Num1 = 0
+    ## Exception of Num2
+    if lines[3][1] != '0' or lines[3][2] != '0' or lines[4][1] != '0' or lines[4][2] != '0':
+        Num2ExpList.append(name)
     Num2 = 0
-    H1 = FHdic[floor]
-    if CXX_Data[CaseCXX + 5].split()[0] != CXX_Data[CaseCXX + 5].split()[3]:
+    H1 = float(FHdic[floor])
+    if lines[5][0] != lines[5][3]:
         Err = True
         print('error in No')
         break
-    No = '#' + CXX_Data[CaseCXX + 5].split()[0]
-    Numx = int(CXX_Data[CaseCXX + 4].split()[3]) + 2
-    Numy = int(CXX_Data[CaseCXX + 3].split()[3]) + 2
-    S = CXX_Data[CaseCXX + 5].split()[1]
+    No = '#' + lines[5][0]
+    Numx = int(lines[4][3]) + 2
+    Numy = int(lines[3][3]) + 2
+    S = int(lines[5][1])
     Nci = CNdic[cross]
     whichFloor = floor
     ALLCASE.append(Case(name, type, BC, HC, No1, Num1, No2, Num2, H1, No, Numx, Numy, S, Nci, whichFloor))
     CaseCXX = CaseCXX + 6
+# handle excption
+for item in Num2ExpList:
+    print(item + ' has not zero in Num2.')
 # initial template excel
 NewWb = Workbook()
 sheetX = NewWb.active
