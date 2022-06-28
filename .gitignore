@@ -132,3 +132,4 @@ dmypy.json
 *.xlsx
 *.DAT
 *.INP
+test/

@@ -35,6 +35,12 @@ FHdic = {}
 CNdic = {}
 ALLCASE = []
 Num2ExpList = []
+## load CXX
+CXX = open('CXX.DAT', 'r')
+## get Floor and Cross section
+CandF = CXX.readline().split()
+C = int(CandF[0])
+F = int(CandF[1])
 print('Makeing dictionary from CNK1 and MASS103...')
 ## load CNK
 CNK1 = open('CNK1.INP', 'r')
@@ -44,10 +50,10 @@ while KeepRead :
     line = CNK1.readline()
     if line.find('col.data') != -1:
         KeepRead = False
-C = CNK1.readline().split()[0]
-for i in range(int(C)):
-    line = CNK1.readline().split(',')
-    CNdic[line[1]] = int(line[2])
+CNK1.readline()
+## make dictionary
+for i in range(C):
+    CNdic[i] = int(CNK1.readline().split(',')[2])
 ## load MASS103
 MASS = open('MASS103.INP', 'r')
 ## Load useless data
@@ -56,35 +62,27 @@ while KeepRead :
     line = MASS.readline()
     if line.find('FLOOR') != -1:
         KeepRead = False
-## load CXX
-CXX = open('CXX.DAT', 'r')
-## get Floor and Cross section
-F = CXX.readline().split()[1]
-## Load useless data in CXX
-for i in range(int(C)):
-    CXX.readline()
-for i in range(int(F)):
-    CXX.readline()
-for i in range(int(F)):
-    CXX.readline()
 ## get h1 from MASS
 tmp = "{:.1f}".format(float(MASS.readline().split()[1]) * 100.0)
-for i in range(int(F)) :
+for i in range(F) :
     line = MASS.readline().split()
-    if line[0][-1] == 'L':
-        fin = line[0][:-1]
-    elif line[0][-1] == 'F':
-        fin = line[0]
-    else:
-       fin = line[0] + 'F'
-    FHdic[fin] = tmp
+    FHdic[i] = tmp
     tmp = "{:.1f}".format(float(line[1]) * 100.0)
 print('Makeing dictionary complete')
 print('Loading data from CXX...')
+## Load useless data in CXX
+for i in range(C):
+    CXX.readline()
+for i in range(F):
+    CXX.readline()
+for i in range(F):
+    CXX.readline()
 CXX_Data = CXX.readlines()
 LineLen = len(CXX_Data)
 Progress = 0
 CaseCXX = 0
+NowC = 0
+NowF = 0
 while CaseCXX < LineLen:
     ## set lines
     lines = []
@@ -94,16 +92,16 @@ while CaseCXX < LineLen:
     lines.append(CXX_Data[CaseCXX + 3].split())
     lines.append(CXX_Data[CaseCXX + 4].split())
     lines.append(CXX_Data[CaseCXX + 5].split())
-    #floor and cross
+    #floor and name
     floor = lines[0][0] + 'F'
-    cross = lines[0][2]
-    # name
-    name = floor + cross
+    name = floor + lines[0][2]
     ## BC HC type
     BC = float(lines[1][0])
     HC = float(lines[1][1])
     if BC == 0 and HC == 0:
         CaseCXX = CaseCXX + 6
+        NowF = (NowF + 1) % F
+        NowC = (NowC + 1) % C
         continue
     if HC == 0:
         type = 'CIRL'
@@ -118,14 +116,14 @@ while CaseCXX < LineLen:
     No1 = '#' + No1
     No2 = '#' + No2
     ## Num1 Num2
-    Num1 = int(lines[3][0]) + int(lines[4][0]) - 4
+    Num1 = (int(lines[3][0]) + int(lines[4][0])) * 2 - 4
     if Num1 < 0:
         Num1 = 0
     ## Exception of Num2
     if lines[3][1] != '0' or lines[3][2] != '0' or lines[4][1] != '0' or lines[4][2] != '0':
         Num2ExpList.append(name)
     Num2 = 0
-    H1 = float(FHdic[floor])
+    H1 = float(FHdic[NowF])
     if lines[5][0] != lines[5][3]:
         Err = True
         print('error in No. First Element diff with last Element in line 5')
@@ -133,10 +131,12 @@ while CaseCXX < LineLen:
     Numx = int(lines[4][3]) + 2
     Numy = int(lines[3][3]) + 2
     S = int(lines[5][1])
-    Nci = CNdic[cross]
+    Nci = CNdic[NowC]
     whichFloor = floor
     ALLCASE.append(Case(name, type, BC, HC, No1, Num1, No2, Num2, H1, No, Numx, Numy, S, Nci, whichFloor))
     CaseCXX = CaseCXX + 6
+    NowF = (NowF + 1) % F
+    NowC = (NowC + 1) % C
     if float(CaseCXX / LineLen) * 10.0 > Progress:
         Progress = Progress + 1
         print("\r", end = '')
@@ -147,7 +147,6 @@ while CaseCXX < LineLen:
             print(' ', end = '')
         print(']', end = '')
         time.sleep(0.05)
-print()
 # initial template excel
 print('initailize excel...')
 NewWb = Workbook()
