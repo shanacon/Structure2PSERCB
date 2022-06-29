@@ -6,6 +6,8 @@ from openpyxl.styles import Alignment
 import time
 import os
 import sys
+from inspect import currentframe, getframeinfo
+from LogSystem import *
 def myexcepthook(type, value, traceback, oldhook=sys.excepthook):
     oldhook(type, value, traceback)
     input("Press RETURN. ")
@@ -30,45 +32,66 @@ class Case :
         self.S = S  
         self.Nci = Nci  
         self.whichFloor = whichFloor
-Err = False
 FHdic = {}
 CNdic = {}
 ALLCASE = []
 Num2ExpList = []
-## load CXX
-CXX = open('CXX.DAT', 'r')
+# load CXX
+CXX = ReadFile('CXX.DAT', os.path.basename(__file__))
 ## get Floor and Cross section
 CandF = CXX.readline().split()
-C = int(CandF[0])
-F = int(CandF[1])
+try :
+    C = int(CandF[0])
+    F = int(CandF[1])
+except Exception as e:
+    WriteEx()
+    sys.exit('CXX Read File Error.')
 print('Makeing dictionary from CNK1 and MASS103...')
 ## load CNK
-CNK1 = open('CNK1.INP', 'r')
+CNK1 = ReadFile('CNK1.INP', os.path.basename(__file__))
 ## Load useless data
 KeepRead  = True
 while KeepRead :
     line = CNK1.readline()
     if line.find('col.data') != -1:
         KeepRead = False
+    if line == '' :
+        WriteError('CNK1 Read File Error. No col.data.', os.path.basename(__file__))
+        sys.exit('CNK1 Read File Error. No col.data.')
 CNK1.readline()
 ## make dictionary
 for i in range(C):
-    CNdic[i] = int(CNK1.readline().split(',')[2])
+    try :
+        CNdic[i] = int(CNK1.readline().split(',')[2])
+    except Exception as e:
+        WriteEx()
+        sys.exit('CNK1 Read File Error. Line can not split normally.')
 ## load MASS103
-MASS = open('MASS103.INP', 'r')
+MASS = ReadFile('MASS103.INP', os.path.basename(__file__))
 ## Load useless data
 KeepRead  = True
 while KeepRead :
     line = MASS.readline()
     if line.find('FLOOR') != -1:
         KeepRead = False
+    if line == '' :
+        WriteError('MASS103 Read File Error. No FLOOR.', os.path.basename(__file__))
+        sys.exit('MASS103 Read File Error. No FLOOR.')
 ## get h1 from MASS
-tmp = "{:.1f}".format(float(MASS.readline().split()[1]) * 100.0)
+try :
+    tmp = "{:.1f}".format(float(MASS.readline().split()[1]) * 100.0)
+except Exception as e:
+        WriteEx()
+        sys.exit('MASS103 Read File Error. Line can not split normally.')
 for i in range(F) :
     line = MASS.readline().split()
     FHdic[i] = tmp
-    tmp = "{:.1f}".format(float(line[1]) * 100.0)
-print('Makeing dictionary complete')
+    try :
+        tmp = "{:.1f}".format(float(line[1]) * 100.0)
+    except Exception as e:
+        WriteEx()
+        sys.exit('MASS103 Read File Error. Line can not split normally.')
+print('Make dictionary complete')
 print('Loading data from CXX...')
 ## Load useless data in CXX
 for i in range(C):
@@ -86,52 +109,83 @@ NowF = 0
 while CaseCXX < LineLen:
     ## set lines
     lines = []
-    lines.append(CXX_Data[CaseCXX].split())
-    lines.append(CXX_Data[CaseCXX + 1].split())
-    lines.append(CXX_Data[CaseCXX + 2].split())
-    lines.append(CXX_Data[CaseCXX + 3].split())
-    lines.append(CXX_Data[CaseCXX + 4].split())
-    lines.append(CXX_Data[CaseCXX + 5].split())
+    try :
+        lines.append(CXX_Data[CaseCXX].split())
+        lines.append(CXX_Data[CaseCXX + 1].split())
+        lines.append(CXX_Data[CaseCXX + 2].split())
+        lines.append(CXX_Data[CaseCXX + 3].split())
+        lines.append(CXX_Data[CaseCXX + 4].split())
+        lines.append(CXX_Data[CaseCXX + 5].split())
+    except Exception as e:
+        WriteEx()
+        sys.exit('CXXData Out of range.')
     #floor and name
-    floor = lines[0][0] + 'F'
-    name = floor + lines[0][2]
+    try :
+        floor = lines[0][0] + 'F'
+        name = floor + lines[0][2]
+    except Exception as e:
+        WriteEx()
+        sys.exit('CXX: line 0 Out of range. Doing floor name.')
     ## BC HC type
-    BC = float(lines[1][0])
-    HC = float(lines[1][1])
+    try :
+        BC = float(lines[1][0])
+        HC = float(lines[1][1])
+    except Exception as e:
+        WriteEx()
+        sys.exit('CXX: line 1 Out of range. Doing BC HC.')
     if BC == 0 and HC == 0:
         CaseCXX = CaseCXX + 6
         NowF = (NowF + 1) % F
         NowC = (NowC + 1) % C
         continue
-    if HC == 0:
+    if HC == 0 or BC == 0:
         type = 'CIRL'
     else :
         type = 'RECT'
     ## No1 No2
-    No1 = lines[2][0]
-    if lines[2][1] == '0':
-        No2 = str(int(No1) - 1)
-    else :
-        No2 = lines[2][1]
+    try :
+        No1 = lines[2][0]
+        if lines[2][1] == '0':
+            No2 = str(int(No1) - 1)
+        else :
+            No2 = lines[2][1]
+    except Exception as e:
+        WriteEx()
+        sys.exit('CXX: line 2 Out of range. Doing No1 No2.')
     No1 = '#' + No1
     No2 = '#' + No2
     ## Num1 Num2
-    Num1 = (int(lines[3][0]) + int(lines[4][0])) * 2 - 4
-    if Num1 < 0:
-        Num1 = 0
-    ## Exception of Num2
-    if lines[3][1] != '0' or lines[3][2] != '0' or lines[4][1] != '0' or lines[4][2] != '0':
-        Num2ExpList.append(name)
+    try :
+        Num1 = (int(lines[3][0]) + int(lines[4][0])) * 2 - 4
+        if Num1 < 0:
+            Num1 = 0
+        ## Exception of Num2
+        if lines[3][1] != '0' or lines[3][2] != '0' or lines[4][1] != '0' or lines[4][2] != '0':
+            Num2ExpList.append(name)
+    except Exception as e:
+        WriteEx()
+        sys.exit('CXX: line 3 or 4 Out of range. Doing Num1.')
     Num2 = 0
-    H1 = float(FHdic[NowF])
-    if lines[5][0] != lines[5][3]:
-        Err = True
-        print('error in No. First Element diff with last Element in line 5')
-    No = '#' + lines[5][0]
-    Numx = int(lines[4][3]) + 2
-    Numy = int(lines[3][3]) + 2
-    S = int(lines[5][1])
-    Nci = CNdic[NowC]
+    try :
+        H1 = float(FHdic[NowF])
+    except Exception as e:
+        WriteEx()
+        sys.exit('Dictionary Key Error. Doing H1.')
+    try :
+        if lines[5][0] != lines[5][3]:
+            sys.exit('Error in No. First Element diff with last Element in line 5.')
+        No = '#' + lines[5][0]
+        Numx = int(lines[4][3]) + 2
+        Numy = int(lines[3][3]) + 2
+        S = int(lines[5][1])
+    except Exception as e:
+        WriteEx()
+        sys.exit('CXX: line 4 or 5 Out of range. Doing No Numxy S.')
+    try :
+        Nci = CNdic[NowC]
+    except Exception as e:
+        WriteEx()
+        sys.exit('Dictionary Key Error. Doing Nci.')
     whichFloor = floor
     ALLCASE.append(Case(name, type, BC, HC, No1, Num1, No2, Num2, H1, No, Numx, Numy, S, Nci, whichFloor))
     CaseCXX = CaseCXX + 6
@@ -148,7 +202,7 @@ while CaseCXX < LineLen:
         print(']', end = '')
         time.sleep(0.05)
 # initial template excel
-print('initailize excel...')
+print('Initailize excel...')
 NewWb = Workbook()
 sheetX = NewWb.active
 sheetX.title = '一般柱-X'
@@ -187,9 +241,9 @@ for item in SheetRange[0]:
     item.font = Font(name = 'Times New Roman', bold=True, size = 14)
     item.alignment = Alignment(horizontal = 'center')
     iY = iY + 1
-print('initail excel complete')
+print('Initail excel complete')
 ## input data to excel
-print('writing data to excel...')
+print('Writing data to sheet...')
 CaseCount = 3
 Caselen = len(ALLCASE)
 Progress = 0
@@ -237,7 +291,8 @@ for case in ALLCASE :
         print(']', end = '')
         time.sleep(0.05)
 print()
-print('complete write data to excel\n')
+print('Complete write data to sheet')
+print('Writing data to excel...\n')
 ## Final Adjustment
 for row in range(2, sheetX.max_row):
     for column in range(sheetX.max_column):
@@ -247,12 +302,13 @@ for row in range(2, sheetY.max_row):
     for column in range(sheetY.max_column):
         sheetY.cell(row=row+1,column=column+1).alignment = Alignment(horizontal = 'center')
         sheetY.cell(row=row+1,column=column+1).font = Font(name = 'Times New Roman', size = 14)
-# handle excption
-for item in Num2ExpList:
-    print(item + ' has not zero in Num2.')
 try:
     NewWb.save('test.xlsx')
-    print('\ncomplete!!')
 except PermissionError as e:
-    print('\nPermission Error. Please close the file and try again.')
+    WriteEx()
+    sys.exit('\nPermission Error. Please close the excel file and try again.')
+# handle excption
+for item in Num2ExpList:
+    print(item + ' may has not zero in Num2.')
+print('\nComplete!!')
 os.system('pause')
