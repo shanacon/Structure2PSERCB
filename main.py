@@ -15,9 +15,26 @@ sys.excepthook = myexcepthook
 InitList_en = ['name', 'type', 'Bc/Dc', 'Hc', 'Los(%)', 'No1', 'Num1', 'No2', 'Num2', 'h1', 'No', 'Num', 'S', 'Nci', 'whichFloor']
 InitList_zh= ['斷面名稱', '型式', '寬度/直徑', '深度', '主筋鋼筋比', '主筋號數(1)', '主筋根數(1)', '主筋號數(2)', '主筋根數(2)', 
               '一樓柱淨高', '橫向箍、繫筋號數', '橫向箍、繫筋根數', '箍筋間距', '柱根數', '所在樓層']
+def IsInt(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
+def compare(case):
+    return -case.FloorPtr
 class Case :
     def __init__(self, name, type, BC, HC, No1, Num1, No2, Num2, H1, No, Numx, Numy, S, Nci, whichFloor):
-        self.name = name  
+        self.name = name
+        tmp = whichFloor[:-1]
+        if tmp[0] == 'R':
+            self.FloorPtr = int(tmp[1:]) + 1000
+        elif tmp[0] == 'B':
+            self.FloorPtr = int(tmp[1:]) * -1
+        elif IsInt(tmp) :
+            self.FloorPtr = int(tmp)
+        else :
+            self.FloorPtr = -1000
         self.type = type  
         self.BC = BC  
         self.HC = HC  
@@ -121,7 +138,10 @@ while CaseCXX < LineLen:
         ExceptionExit('CXXData Out of range.')
     #floor and name
     try :
-        floor = lines[0][0] + 'F'
+        if lines[0][0][-1] >= '0' and lines[0][0][-1] <= '9' or lines[0][0][-1] == 'F':
+            floor = lines[0][0] + 'F'
+        else :
+            floor = lines[0][0][:-1] + 'F'
         name = floor + lines[0][2]
     except Exception as e:
         WriteEx()
@@ -244,6 +264,7 @@ for item in SheetRange[0]:
 print('Initail excel complete')
 ## input data to excel
 print('Writing data to sheet...')
+ALLCASE.sort(key=compare)
 CaseCount = 3
 Caselen = len(ALLCASE)
 Progress = 0
@@ -303,7 +324,7 @@ for row in range(2, sheetY.max_row):
         sheetY.cell(row=row+1,column=column+1).alignment = Alignment(horizontal = 'center')
         sheetY.cell(row=row+1,column=column+1).font = Font(name = 'Times New Roman', size = 14)
 try:
-    NewWb.save('test.xlsx')
+    NewWb.save('PSERCB.xlsx')
 except PermissionError as e:
     WriteEx()
     ExceptionExit('\nPermission Error. Please close the excel file and try again.')
