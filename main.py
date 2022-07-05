@@ -45,7 +45,7 @@ try :
     F = int(CandF[1])
 except Exception as e:
     WriteEx()
-    sys.exit('CXX Read File Error.')
+    ExceptionExit('CXX Read File Error.')
 print('Makeing dictionary from CNK1 and MASS103...')
 ## load CNK
 CNK1 = ReadFile('CNK1.INP', os.path.basename(__file__))
@@ -57,7 +57,7 @@ while KeepRead :
         KeepRead = False
     if line == '' :
         WriteError('CNK1 Read File Error. No col.data.', os.path.basename(__file__))
-        sys.exit('CNK1 Read File Error. No col.data.')
+        ExceptionExit('CNK1 Read File Error. No col.data.')
 CNK1.readline()
 ## make dictionary
 for i in range(C):
@@ -65,7 +65,7 @@ for i in range(C):
         CNdic[i] = int(CNK1.readline().split(',')[2])
     except Exception as e:
         WriteEx()
-        sys.exit('CNK1 Read File Error. Line can not split normally.')
+        ExceptionExit('CNK1 Read File Error. Line can not split normally.')
 ## load MASS103
 MASS = ReadFile('MASS103.INP', os.path.basename(__file__))
 ## Load useless data
@@ -76,13 +76,13 @@ while KeepRead :
         KeepRead = False
     if line == '' :
         WriteError('MASS103 Read File Error. No FLOOR.', os.path.basename(__file__))
-        sys.exit('MASS103 Read File Error. No FLOOR.')
+        ExceptionExit('MASS103 Read File Error. No FLOOR.')
 ## get h1 from MASS
 try :
     tmp = "{:.1f}".format(float(MASS.readline().split()[1]) * 100.0)
 except Exception as e:
         WriteEx()
-        sys.exit('MASS103 Read File Error. Line can not split normally.')
+        ExceptionExit('MASS103 Read File Error. Line can not split normally.')
 for i in range(F) :
     line = MASS.readline().split()
     FHdic[i] = tmp
@@ -90,7 +90,7 @@ for i in range(F) :
         tmp = "{:.1f}".format(float(line[1]) * 100.0)
     except Exception as e:
         WriteEx()
-        sys.exit('MASS103 Read File Error. Line can not split normally.')
+        ExceptionExit('MASS103 Read File Error. Line can not split normally.')
 print('Make dictionary complete')
 print('Loading data from CXX...')
 ## Load useless data in CXX
@@ -118,21 +118,21 @@ while CaseCXX < LineLen:
         lines.append(CXX_Data[CaseCXX + 5].split())
     except Exception as e:
         WriteEx()
-        sys.exit('CXXData Out of range.')
+        ExceptionExit('CXXData Out of range.')
     #floor and name
     try :
         floor = lines[0][0] + 'F'
         name = floor + lines[0][2]
     except Exception as e:
         WriteEx()
-        sys.exit('CXX: line 0 Out of range. Doing floor name.')
+        ExceptionExit('CXX: line 0 Out of range. Doing floor name.')
     ## BC HC type
     try :
         BC = float(lines[1][0])
         HC = float(lines[1][1])
     except Exception as e:
         WriteEx()
-        sys.exit('CXX: line 1 Out of range. Doing BC HC.')
+        ExceptionExit('CXX: line 1 Out of range. Doing BC HC.')
     if BC == 0 and HC == 0:
         CaseCXX = CaseCXX + 6
         NowF = (NowF + 1) % F
@@ -151,7 +151,7 @@ while CaseCXX < LineLen:
             No2 = lines[2][1]
     except Exception as e:
         WriteEx()
-        sys.exit('CXX: line 2 Out of range. Doing No1 No2.')
+        ExceptionExit('CXX: line 2 Out of range. Doing No1 No2.')
     No1 = '#' + No1
     No2 = '#' + No2
     ## Num1 Num2
@@ -164,28 +164,28 @@ while CaseCXX < LineLen:
             Num2ExpList.append(name)
     except Exception as e:
         WriteEx()
-        sys.exit('CXX: line 3 or 4 Out of range. Doing Num1.')
+        ExceptionExit('CXX: line 3 or 4 Out of range. Doing Num1.')
     Num2 = 0
     try :
         H1 = float(FHdic[NowF])
     except Exception as e:
         WriteEx()
-        sys.exit('Dictionary Key Error. Doing H1.')
+        ExceptionExit('Dictionary Key Error. Doing H1.')
     try :
         if lines[5][0] != lines[5][3]:
-            sys.exit('Error in No. First Element diff with last Element in line 5.')
+            ExceptionExit('Error in No. First Element diff with last Element in line 5.')
         No = '#' + lines[5][0]
         Numx = int(lines[4][3]) + 2
         Numy = int(lines[3][3]) + 2
         S = int(lines[5][1])
     except Exception as e:
         WriteEx()
-        sys.exit('CXX: line 4 or 5 Out of range. Doing No Numxy S.')
+        ExceptionExit('CXX: line 4 or 5 Out of range. Doing No Numxy S.')
     try :
         Nci = CNdic[NowC]
     except Exception as e:
         WriteEx()
-        sys.exit('Dictionary Key Error. Doing Nci.')
+        ExceptionExit('Dictionary Key Error. Doing Nci.')
     whichFloor = floor
     ALLCASE.append(Case(name, type, BC, HC, No1, Num1, No2, Num2, H1, No, Numx, Numy, S, Nci, whichFloor))
     CaseCXX = CaseCXX + 6
@@ -202,7 +202,7 @@ while CaseCXX < LineLen:
         print(']', end = '')
         time.sleep(0.05)
 # initial template excel
-print('Initailize excel...')
+print('\nInitailize excel...')
 NewWb = Workbook()
 sheetX = NewWb.active
 sheetX.title = '一般柱-X'
@@ -306,7 +306,7 @@ try:
     NewWb.save('test.xlsx')
 except PermissionError as e:
     WriteEx()
-    sys.exit('\nPermission Error. Please close the excel file and try again.')
+    ExceptionExit('\nPermission Error. Please close the excel file and try again.')
 # handle excption
 for item in Num2ExpList:
     print(item + ' may has not zero in Num2.')

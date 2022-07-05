@@ -30,9 +30,14 @@ def WriteError(ErrData, file, append = True):
     ##
     log.write(f'[{current_time}]:\nError {ErrData} in {file}.\n\n')
 
+def ExceptionExit(msg):
+    print(msg)
+    os.system('pause')
+    sys.exit()
+
 def ReadFile(filename, scriptname) : 
     if os.path.exists(filename) :
         return open(filename, 'r')
     else :
         WriteError(f'{filename} File Not Found.', scriptname)
-        sys.exit(f'{filename} File Not Found.')
+        ExceptionExit(f'{filename} File Not Found.')
